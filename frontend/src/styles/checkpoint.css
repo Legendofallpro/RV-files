@@ -19,6 +19,52 @@
   letter-spacing: -0.02em;
 }
 
+/* ---------- Paper grain, glow, hazard utilities ---------- */
+body {
+  background-image:
+    radial-gradient(
+      circle at 20% 20%,
+      color-mix(in srgb, var(--rv-ink) 7%, transparent) 0.5px,
+      transparent 0.7px
+    ),
+    radial-gradient(
+      circle at 70% 60%,
+      color-mix(in srgb, var(--rv-ink) 5%, transparent) 0.5px,
+      transparent 0.7px
+    ),
+    radial-gradient(ellipse at 50% -10%, var(--rv-glow), transparent 60%);
+  background-size: 3px 3px, 5px 5px, 100% 520px;
+  background-repeat: repeat, repeat, no-repeat;
+}
+
+.rv-glow {
+  position: relative;
+  box-shadow:
+    0 0 0 1px var(--rv-line),
+    0 12px 48px -12px var(--rv-glow);
+}
+.rv-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    var(--rv-glow),
+    transparent 65%
+  );
+  opacity: 0.5;
+}
+.rv-hazard {
+  height: 12px;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--rv-signal) 0 10px,
+    var(--rv-ink) 10px 20px
+  );
+}
+
 /* ---------- Status pills ---------- */
 .rv-pill {
   display: inline-flex;
@@ -56,9 +102,9 @@
   border-color: var(--rv-revoked);
 }
 .rv-pill--tripwire {
-  color: #ff7a45;
-  border-color: #16130f;
-  background: #16130f;
+  color: var(--rv-signal);
+  border-color: var(--rv-hazard-b);
+  background: var(--rv-hazard-b);
 }
 .rv-pill--tripwire::before {
   width: 16px;
@@ -66,10 +112,10 @@
   border-radius: 0;
   background: repeating-linear-gradient(
     -45deg,
-    #ff5a1f 0 3px,
-    #16130f 3px 6px
+    var(--rv-hazard-a) 0 3px,
+    var(--rv-hazard-b) 3px 6px
   );
-  outline: 1px solid #ff5a1f;
+  outline: 1px solid var(--rv-hazard-a);
   background-size: 8.5px 8.5px;
   animation: rv-hazard 0.9s linear infinite;
 }
@@ -107,7 +153,7 @@
   height: 10px;
   border-radius: 3px;
   background: var(--rv-ink);
-  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 -3px 0 var(--rv-glow);
 }
 .rv-ticket-clip {
   overflow: hidden;
@@ -380,9 +426,9 @@
   top: 50%;
   z-index: 3;
   padding: 2px 12px;
-  border: 3px solid #c93b0b;
+  border: 3px solid var(--rv-danger);
   border-radius: 4px;
-  color: #c93b0b;
+  color: var(--rv-danger);
   background: var(--rv-surface);
   font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
   font-size: 22px;
@@ -461,7 +507,7 @@
   right: 0;
   height: 2px;
   background: var(--rv-signal);
-  box-shadow: 0 0 0 1px rgba(255, 90, 31, 0.25);
+  box-shadow: 0 0 0 1px var(--rv-glow);
 }
 
 @media (prefers-reduced-motion: reduce) {
