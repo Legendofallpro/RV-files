@@ -1,6 +1,6 @@
 import { MantineThemeOverride } from "@mantine/core";
 
-// "Inspection checkpoint" palette: paper, ink and a single safety-orange signal.
+// "Stamp" palette: paper, ink-navy and a vermilion signal.
 const signal: [
   string,
   string,
@@ -13,16 +13,16 @@ const signal: [
   string,
   string,
 ] = [
-  "#FFF1EA",
-  "#FFDCCB",
-  "#FFBA9C",
-  "#FF956A",
-  "#FF7643",
-  "#FF5A1F",
-  "#F04A10",
-  "#C93B0B",
-  "#9E2F0B",
-  "#6E220A",
+  "#FFF0EB",
+  "#FFDDD2",
+  "#FFBBA8",
+  "#FF9879",
+  "#FF7A56",
+  "#FF5E3A",
+  "#C8381A",
+  "#A62D14",
+  "#82230F",
+  "#5C190B",
 ];
 
 export const DISPLAY_FONT = "'Space Grotesk', 'IBM Plex Sans', sans-serif";
@@ -31,11 +31,11 @@ export const BODY_FONT =
 export const MONO_FONT = "'JetBrains Mono', ui-monospace, Menlo, monospace";
 
 export default <MantineThemeOverride>{
-  white: "#FBF9F4",
-  black: "#16130F",
+  white: "#FBFAF6",
+  black: "#17140F",
   colors: {
     // `victoria` is the historical primary key stored in admin config; it now
-    // resolves to safety orange so existing installs pick up the new identity.
+    // resolves to vermilion so existing installs pick up the new identity.
     victoria: signal,
     signal,
     orange: signal,
@@ -51,17 +51,17 @@ export default <MantineThemeOverride>{
       "#39342E",
       "#221F1B",
     ],
-    dark: [
-      "#EDE8DD",
-      "#CFC8BA",
-      "#A39B8E",
-      "#7A7368",
-      "#4A453F",
-      "#36322D",
-      "#24211E",
-      "#121110",
-      "#0D0C0B",
-      "#080707",
+     dark: [
+      "#F1EBDD",
+      "#D0CBD8",
+      "#ABA6B8",
+      "#4D4A60",
+      "#2F2D3D",
+      "#252330",
+      "#1B1A24",
+      "#121119",
+      "#0D0C13",
+      "#08080C",
     ],
     green: [
       "#E9F5EE",
@@ -77,7 +77,7 @@ export default <MantineThemeOverride>{
     ],
   },
   primaryColor: "victoria",
-  primaryShade: { light: 5, dark: 5 },
+  primaryShade: { light: 6, dark: 5 },
   defaultRadius: "sm",
   radius: {
     xs: "0.125rem",
@@ -93,11 +93,11 @@ export default <MantineThemeOverride>{
     fontWeight: 700,
   },
   shadows: {
-    xs: "0 1px 0 rgba(22,19,15,0.08)",
-    sm: "0 1px 0 rgba(22,19,15,0.10)",
-    md: "0 2px 0 rgba(22,19,15,0.10)",
-    lg: "0 4px 0 rgba(22,19,15,0.10)",
-    xl: "0 8px 0 rgba(22,19,15,0.10)",
+    xs: "0 1px 0 rgba(23,20,15,0.08)",
+    sm: "0 1px 0 rgba(23,20,15,0.10)",
+    md: "0 2px 0 rgba(23,20,15,0.10)",
+    lg: "0 4px 0 rgba(23,20,15,0.10)",
+    xl: "0 8px 0 rgba(23,20,15,0.10)",
   },
   components: {
     Button: {
@@ -115,10 +115,13 @@ export default <MantineThemeOverride>{
             ...(params.variant === "filled" || !params.variant
               ? isPrimary
                 ? {
-                    color: theme.black,
-                    border: `1.5px solid ${theme.black}`,
+                    color: "var(--rv-signal-ink)",
+                    border: "1.5px solid var(--rv-signal-ink)",
                     "&:not(:disabled):hover": {
-                      backgroundColor: theme.colors.victoria[4],
+                      backgroundColor:
+                        theme.colors.victoria[
+                          theme.colorScheme === "dark" ? 4 : 7
+                        ],
                     },
                   }
                 : {}
@@ -132,7 +135,10 @@ export default <MantineThemeOverride>{
         root:
           params.variant === "filled" &&
           (params.color === "victoria" || params.color === "orange")
-            ? { color: theme.black, border: `1.5px solid ${theme.black}` }
+            ? {
+                color: "var(--rv-signal-ink)",
+                border: "1.5px solid var(--rv-signal-ink)",
+              }
             : {},
       }),
     },
@@ -144,7 +150,8 @@ export default <MantineThemeOverride>{
           fontWeight: 700,
         },
         content: {
-          border: `1.5px solid ${theme.colorScheme === "dark" ? theme.colors.dark[4] : theme.black}`,
+          border: "1.5px solid var(--rv-line-strong)",
+          backgroundColor: "var(--rv-surface)",
         },
       }),
     },
@@ -162,11 +169,8 @@ export default <MantineThemeOverride>{
             textTransform: "uppercase",
             letterSpacing: "0.1em",
             fontWeight: 600,
-            color:
-              theme.colorScheme === "dark"
-                ? theme.colors.dark[2]
-                : theme.colors.gray[7],
-            borderBottom: `1.5px solid ${theme.colorScheme === "dark" ? theme.colors.dark[3] : theme.black}`,
+            color: "var(--rv-muted)",
+            borderBottom: "1.5px solid var(--rv-line-strong)",
           },
         },
       }),
