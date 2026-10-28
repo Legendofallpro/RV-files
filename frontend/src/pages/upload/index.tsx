@@ -1,7 +1,6 @@
 import {
   Button,
   Center,
-  Group,
   Space,
   Stack,
   Text,
@@ -17,7 +16,9 @@ import { TbShieldLock } from "react-icons/tb";
 import { FormattedMessage } from "react-intl";
 import Meta from "../../components/Meta";
 import Dropzone from "../../components/upload/Dropzone";
-import FileList from "../../components/upload/FileList";
+import PrecheckList from "../../components/upload/PrecheckList";
+import bay from "../../components/upload/bay.module.css";
+import { motion, useReducedMotion } from "framer-motion";
 import showCompletedUploadModal from "../../components/upload/modals/showCompletedUploadModal";
 import showCreateUploadModal from "../../components/upload/modals/showCreateUploadModal";
 import useConfig from "../../hooks/config.hook";
@@ -57,6 +58,24 @@ const Upload = ({
   const config = useConfig();
   const [files, setFiles] = useState<FileUpload[]>([]);
   const [isUploading, setisUploading] = useState(false);
+  const [rejected, setRejected] = useState<FileUpload[]>([]);
+  const [usedStorage, setUsedStorage] = useState<number | null>(null);
+  const reduceMotion = useReducedMotion();
+
+  // Read-only: sum the owner's live shares for the quota gauge.
+  useEffect(() => {
+    if (!user || isReverseShare) return;
+    shareService
+      .getMyShares()
+      .then((shares) =>
+        setUsedStorage(
+          shares
+            .filter((s) => !s.removedReason)
+            .reduce((acc, s) => acc + (Number(s.size) || 0), 0),
+        ),
+      )
+      .catch(() => setUsedStorage(null));
+  }, [user, isReverseShare]);
 
   const filesRef = useRef<FileUpload[]>(files);
   filesRef.current = files;
@@ -306,32 +325,201 @@ const Upload = ({
     );
   }
 
+  const quota = user?.storageQuotaLimit
+    ? parseInt(user.storageQuotaLimit)
+    : 50 * 1000 * 1000;
+  const sharePct = Math.min(100, (currentFilesSize / maxShareSize) * 100);
+  const used = usedStorage ?? 0;
+  const usedPct = Math.min(100, (used / quota) * 100);
+  const pendingPct = Math.min(100 - usedPct, (currentFilesSize / quota) * 100);
+  const overQuota = used + currentFilesSize > quota;
+  const maxExp = config.get("share.maxExpiration") as
+    | { value: number; unit: string }
+    | undefined;
+  const typeCount = new Set(
+    files.map((f) => (f.name.includes(".") ? f.name.split(".").pop() : "bin")),
+  ).size;
+  const fmt = (n: number) => byteToHumanSizeString(n).toUpperCase();
+
+  const readout = (
+    <div className={bay.readout} aria-live="polite">
+      <div className={bay.readCell}>
+        <span className="rv-label">Cleared</span>
+        <strong>{String(files.length).padStart(2, "0")}</strong>
+      </div>
+      <div className={bay.readCell}>
+        <span className="rv-label">Rejected</span>
+        <strong className={rejected.length ? bay.bad : undefined}>
+          {String(rejected.length).padStart(2, "0")}
+        </strong>
+      </div>
+      <div className={bay.readCell}>
+        <span className="rv-label">Load</span>
+        <strong>{fmt(currentFilesSize)}</strong>
+      </div>
+      <div className={bay.readCell}>
+        <span className="rv-label">Types</span>
+        <strong>{String(typeCount).padStart(2, "0")}</strong>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <Meta title={t("upload.title")} />
-      <Group position="right" mb={20}>
-        <Button
-          loading={isUploading}
-          disabled={files.length <= 0}
-          onClick={() => showCreateUploadModalCallback(files)}
+      <div className={bay.wide}>
+      <div className={bay.bayHead}>
+        <div>
+          <div className="rv-label">Inspection bay · outbound</div>
+          <h1 className={bay.bayTitle}>
+            Load, inspect, <em>issue ticket.</em>
+          </h1>
+        </div>
+        <div className={bay.bayMeta}>
+          <span className={bay.live}>Scanner online</span>
+          <span>
+            ID <b>128-bit</b>
+          </span>
+          <span>
+            Limit <b>{fmt(maxShareSize)}</b>
+          </span>
+        </div>
+      </div>
+      <div className={bay.bay}>
+        <div>
+          <Dropzone
+            title={
+              !autoOpenCreateUploadModal && files.length > 0
+                ? t("share.edit.append-upload")
+                : undefined
+            }
+            maxShareSize={maxShareSize}
+            currentFilesSize={currentFilesSize}
+            onFilesChanged={handleDropzoneFilesChanged}
+            onFilesRejected={(blocked) =>
+              setRejected((prev) => [...blocked, ...prev].slice(0, 8))
+            }
+            isUploading={isUploading}
+            readout={readout}
+          />
+          <PrecheckList
+            files={files}
+            setFiles={setFiles}
+            rejected={rejected}
+            onDismissRejected={(i) =>
+              setRejected((prev) => prev.filter((_, j) => j !== i))
+            }
+            maxShareSize={maxShareSize}
+          />
+        </div>
+        <motion.aside
+          className={bay.manifest}
+          initial={reduceMotion ? false : { opacity: 0, x: 24 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.35 }}
+          aria-label="Share manifest"
         >
-          <FormattedMessage id="common.button.share" />
-        </Button>
-      </Group>
-      <Dropzone
-        title={
-          !autoOpenCreateUploadModal && files.length > 0
-            ? t("share.edit.append-upload")
-            : undefined
-        }
-        maxShareSize={maxShareSize}
-        currentFilesSize={currentFilesSize}
-        onFilesChanged={handleDropzoneFilesChanged}
-        isUploading={isUploading}
-      />
-      {files.length > 0 && (
-        <FileList<FileUpload> files={files} setFiles={setFiles} />
-      )}
+          <div className={bay.manHead}>
+            <h3>Manifest</h3>
+            <span className="rv-label">Form RV-01</span>
+          </div>
+          <div className={bay.manSec}>
+            <div className={bay.secNo}>
+              <span>
+                <b>01</b> · Share load
+              </span>
+              <span>{sharePct.toFixed(0)}%</span>
+            </div>
+            <div className={bay.bigNum}>
+              {fmt(currentFilesSize)} <small>/ {fmt(maxShareSize)}</small>
+            </div>
+            <div className={`${bay.gauge} ${sharePct >= 100 ? bay.gaugeOver : ""}`}>
+              <motion.i
+                initial={false}
+                animate={{ width: `${sharePct}%` }}
+                transition={{ duration: reduceMotion ? 0 : 0.4 }}
+              />
+            </div>
+            <div className={bay.gaugeScale}>
+              <span>0</span>
+              <span>{fmt(maxShareSize / 2)}</span>
+              <span>{fmt(maxShareSize)}</span>
+            </div>
+          </div>
+          {!isReverseShare && (
+            <div className={bay.manSec}>
+              <div className={bay.secNo}>
+                <span>
+                  <b>02</b> · Account quota
+                </span>
+                <span>{usedStorage === null ? "LIMIT" : `${(usedPct + pendingPct).toFixed(0)}%`}</span>
+              </div>
+              <div className={bay.bigNum}>
+                {usedStorage === null ? "—" : fmt(used + currentFilesSize)}{" "}
+                <small>/ {fmt(quota)}</small>
+              </div>
+              <div className={`${bay.gauge} ${overQuota ? bay.gaugeOver : ""}`}>
+                <i style={{ width: `${usedPct}%` }} />
+                <i
+                  className={bay.pending}
+                  style={{ left: `${usedPct}%`, width: `${pendingPct}%` }}
+                />
+              </div>
+              <div className={bay.gaugeScale}>
+                <span>■ live shares</span>
+                <span style={{ color: "var(--rv-signal)" }}>■ this load</span>
+              </div>
+            </div>
+          )}
+          <div className={bay.manSec}>
+            <div className={bay.secNo}>
+              <span>
+                <b>03</b> · Ticket rules
+              </span>
+            </div>
+            <ul className={bay.rules}>
+              <li>
+                Max expiry{" "}
+                <b>
+                  {user?.isAdmin
+                    ? "NONE (ADMIN)"
+                    : maxExp && maxExp.value
+                      ? `${maxExp.value} ${maxExp.unit}`.toUpperCase()
+                      : "7 DAYS"}
+                </b>
+              </li>
+              <li>
+                Link ID <b>128-BIT RANDOM</b>
+              </li>
+              <li>
+                Blocked types <b>21+ BY SERVER</b>
+              </li>
+              <li>
+                Tripwire <b>5 BAD PW · 20 DL / 5 IP</b>
+              </li>
+            </ul>
+          </div>
+          <div className={bay.issueWrap}>
+            <button
+              type="button"
+              className={bay.issue}
+              disabled={files.length <= 0 || isUploading}
+              onClick={() => showCreateUploadModalCallback(files)}
+            >
+              <span>{isUploading ? "PRINTING…" : "ISSUE TICKET"}</span>
+              <small>
+                {files.length} ITEM{files.length === 1 ? "" : "S"} →
+              </small>
+            </button>
+            <div className={bay.issueNote}>
+              {files.length
+                ? "Opens the declaration form"
+                : "Load at least one item to issue"}
+            </div>
+          </div>
+        </motion.aside>
+      </div>
+      </div>
     </>
   );
 };

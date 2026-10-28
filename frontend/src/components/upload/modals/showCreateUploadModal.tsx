@@ -26,6 +26,8 @@ import * as yup from "yup";
 import useTranslate, {
   translateOutsideContext,
 } from "../../../hooks/useTranslate.hook";
+import bay from "../bay.module.css";
+import { byteToHumanSizeString } from "../../../utils/fileSize.util";
 import { FileUpload } from "../../../types/File.type";
 import { CreateShare } from "../../../types/share.type";
 import { getExpirationPreview } from "../../../utils/date.util";
@@ -217,9 +219,16 @@ const CreateUploadModalBody = ({
         </Alert>
       )}
       <form onSubmit={onSubmit}>
-        <Stack align="stretch">
+        <div className={bay.customs}>
+          <div className={bay.customsHead}>
+            <span>Outbound declaration</span>
+            <b>Form RV-01</b>
+          </div>
           {!options.isReverseShare && (
-            <>
+            <div className={bay.customsSec}>
+              <div className={bay.customsSecTitle}>
+                <b>01</b> Validity period
+              </div>
               <Grid align={form.errors.expiration_num ? "center" : "flex-end"}>
                 <Col xs={6}>
                   <NumberInput
@@ -304,7 +313,7 @@ const CreateUploadModalBody = ({
                   form,
                 )}
               </Text>
-            </>
+            </div>
           )}
           <Accordion>
             <Accordion.Item value="description" sx={{ borderBottom: "none" }}>
@@ -437,10 +446,18 @@ const CreateUploadModalBody = ({
               </Accordion.Panel>
             </Accordion.Item>
           </Accordion>
-          <Button type="submit" data-autofocus>
-            <FormattedMessage id="common.button.share" />
-          </Button>
-        </Stack>
+          <div className={bay.customsFoot}>
+            <span className={bay.signLine}>
+              Declared {files.length} item{files.length === 1 ? "" : "s"} ·{" "}
+              {byteToHumanSizeString(
+                files.reduce((acc, f) => acc + f.size, 0),
+              )}
+            </span>
+            <Button type="submit" data-autofocus radius={0}>
+              <FormattedMessage id="common.button.share" />
+            </Button>
+          </div>
+        </div>
       </form>
     </>
   );

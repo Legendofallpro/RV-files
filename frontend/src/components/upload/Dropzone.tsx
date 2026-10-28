@@ -1,10 +1,4 @@
-import {
-  Button,
-  Center,
-  createStyles,
-  Group,
-  Text,
-} from "@mantine/core";
+import { Button, createStyles } from "@mantine/core";
 import { motion, useReducedMotion } from "framer-motion";
 import { Dropzone as MantineDropzone } from "@mantine/dropzone";
 import React, { ForwardedRef, useEffect, useRef, useState } from "react";
@@ -17,48 +11,24 @@ import toast from "../../utils/toast.util";
 import { getFilesFromEvent } from "../../utils/file.util";
 import { filterBlockedFiles } from "../../utils/blockedFiles.util";
 import en from "../../i18n/translations/en-US";
+import bay from "./bay.module.css";
 
-const useStyles = createStyles((theme) => ({
-  wrapper: {
-    position: "relative",
-    marginBottom: 30,
-  },
-
+const useStyles = createStyles(() => ({
   dropzone: {
-    borderWidth: 2,
-    padding: "40px 20px 56px",
-    borderStyle: "dashed",
-    borderColor: theme.colorScheme === "dark" ? theme.colors.dark[2] : theme.black,
-    backgroundColor: "var(--rv-surface)",
-    transition: "border-color 160ms ease, background-color 160ms ease",
+    border: 0,
+    borderRadius: 0,
+    padding: 0,
+    backgroundColor: "transparent",
     "&[data-accept], &:hover": {
-      borderColor: theme.colors.victoria[5],
-      backgroundColor:
-        theme.colorScheme === "dark"
-          ? "rgba(255,106,51,0.08)"
-          : "rgba(255,90,31,0.06)",
+      backgroundColor: "color-mix(in srgb, var(--rv-signal) 6%, transparent)",
     },
   },
-
-  icon: {
-    color:
-      theme.colorScheme === "dark"
-        ? theme.colors.dark[3]
-        : theme.colors.gray[4],
-  },
-
-  control: {
-    position: "absolute",
-    bottom: -20,
-  },
-
   mobileDescription: {
     display: "none",
     "@media (pointer: coarse)": {
       display: "inline",
     },
   },
-
   desktopDescription: {
     display: "inline",
     "@media (pointer: coarse)": {
@@ -73,8 +43,12 @@ const Dropzone = ({
   maxShareSize,
   currentFilesSize = 0,
   onFilesChanged,
+  onFilesRejected,
+  readout,
 }: {
   title?: string;
+  onFilesRejected?: (files: FileUpload[]) => void;
+  readout?: React.ReactNode;
   isUploading: boolean;
   maxShareSize: number;
   currentFilesSize?: number;
@@ -88,7 +62,10 @@ const Dropzone = ({
   // All ingress routes share the same policy: picker, drop, folder and paste.
   const acceptFiles = (incomingFiles: FileUpload[]) => {
     if (isUploading) return;
+    const blocked: FileUpload[] = [];
     const files = filterBlockedFiles(incomingFiles, (name) => {
+      const hit = incomingFiles.find((f) => f.name === name);
+      if (hit) blocked.push(hit);
       toast.error(
         <FormattedMessage
           id="upload.dropzone.notify.blocked-file"
@@ -100,6 +77,7 @@ const Dropzone = ({
       file.uploadingProgress = 0;
       return file;
     });
+    if (blocked.length) onFilesRejected?.(blocked);
     if (files.length) onFilesChanged(files);
   };
 
@@ -148,26 +126,20 @@ const Dropzone = ({
       : "upload.dropzone.description.desktop";
   }
 
+  const scanning = !reduceMotion;
+
   return (
     <motion.div
-      className={classes.wrapper}
+      className={bay.gate}
       animate={{
         scale: isDragging && !reduceMotion ? 1.01 : 1,
       }}
       transition={{ duration: reduceMotion ? 0 : 0.15 }}
     >
-      {isDragging && (
-        <div className="rv-gate" aria-hidden="true">
-          {!reduceMotion && (
-            <motion.div
-              className="rv-gate__beam"
-              initial={{ top: "0%" }}
-              animate={{ top: ["0%", "100%", "0%"] }}
-              transition={{ duration: 1.6, ease: "easeInOut", repeat: Infinity }}
-            />
-          )}
-        </div>
-      )}
+      <div className={bay.gateRail} aria-hidden="true">
+        <span>Gate 01 · Drop inspection</span>
+        <span>{isUploading ? "● Transmitting" : isDragging ? "● Scanning" : "○ Standby"}</span>
+      </div>
       <input
         type="file"
         ref={folderInputRef}
@@ -179,85 +151,102 @@ const Dropzone = ({
         multiple
         onChange={handleFolderSelect}
       />
-      <MantineDropzone
-        onReject={(e) => {
-          setIsDragging(false);
-          if (e[0]?.errors[0]) toast.error(e[0].errors[0].message);
-        }}
-        onDragEnter={() => !isUploading && setIsDragging(true)}
-        onDragLeave={() => setIsDragging(false)}
-        disabled={isUploading}
-        openRef={openRef as ForwardedRef<() => void>}
-        getFilesFromEvent={getFilesFromEvent}
-        onDrop={(files: FileUpload[]) => {
-          setIsDragging(false);
-          acceptFiles(files);
-        }}
-        className={classes.dropzone}
-        radius="md"
-      >
-        <div style={{ pointerEvents: "none" }}>
-          <div className="rv-label" style={{ textAlign: "center" }}>
-            {isDragging ? "Release to inspect" : "Drop at the checkpoint"}
-          </div>
-          <Group position="center" mt="md">
-            <TbCloudUpload size={40} strokeWidth={1.6} />
-          </Group>
-          <Text
-            align="center"
-            weight={700}
-            mt="sm"
-            className="rv-display"
-            style={{ fontSize: 24 }}
-          >
-            {title || <FormattedMessage id="upload.dropzone.title" />}
-          </Text>
-          <Text align="center" size="sm" mt="xs" color="dimmed">
-            <span className={classes.mobileDescription}>
+      <div className={bay.gateField}>
+        <div className={bay.gateGrid} aria-hidden="true" />
+        <span className={`${bay.corner} ${bay.cTL}`} aria-hidden="true" />
+        <span className={`${bay.corner} ${bay.cTR}`} aria-hidden="true" />
+        <span className={`${bay.corner} ${bay.cBL}`} aria-hidden="true" />
+        <span className={`${bay.corner} ${bay.cBR}`} aria-hidden="true" />
+        {scanning && (
+          <motion.div
+            aria-hidden="true"
+            className={`${bay.beam} ${isDragging ? bay.beamHot : ""}`}
+            initial={{ top: "-30%" }}
+            animate={{ top: ["-30%", "100%"] }}
+            transition={{
+              duration: isDragging ? 1.1 : 3.2,
+              ease: "linear",
+              repeat: Infinity,
+            }}
+          />
+        )}
+        <MantineDropzone
+          onReject={(e) => {
+            setIsDragging(false);
+            if (e[0]?.errors[0]) toast.error(e[0].errors[0].message);
+          }}
+          onDragEnter={() => !isUploading && setIsDragging(true)}
+          onDragLeave={() => setIsDragging(false)}
+          disabled={isUploading}
+          openRef={openRef as ForwardedRef<() => void>}
+          getFilesFromEvent={getFilesFromEvent}
+          onDrop={(files: FileUpload[]) => {
+            setIsDragging(false);
+            acceptFiles(files);
+          }}
+          className={classes.dropzone}
+          radius={0}
+        >
+          <div className={bay.gateBody} style={{ pointerEvents: "none" }}>
+            <div
+              className={`${bay.aperture} ${scanning ? bay.apertureSpin : ""}`}
+            >
+              <TbCloudUpload size={40} strokeWidth={1.6} />
+            </div>
+            <div className={bay.gateCopy}>
+              <div className="rv-label">
+                {isDragging ? "Release to inspect" : "Drop at the checkpoint"}
+              </div>
+              <h2>
+                {title || <FormattedMessage id="upload.dropzone.title" />}
+              </h2>
+              <p>
+                <span className={classes.mobileDescription}>
+                  <FormattedMessage
+                    id={
+                      isMounted
+                        ? dropzoneMessageId(true)
+                        : "upload.dropzone.description.mobile"
+                    }
+                    values={{
+                      maxSize: byteToHumanSizeString(maxShareSize),
+                    }}
+                  />
+                </span>
+                <span className={classes.desktopDescription}>
+                  <FormattedMessage
+                    id={
+                      isMounted
+                        ? dropzoneMessageId(false)
+                        : "upload.dropzone.description.desktop"
+                    }
+                    values={{
+                      maxSize: byteToHumanSizeString(maxShareSize),
+                      shortcut: isMac ? "⌘+V" : "Ctrl+V",
+                    }}
+                  />
+                </span>
+              </p>
+            </div>
+            <span className="sr-only">
               <FormattedMessage
-                id={
-                  isMounted
-                    ? dropzoneMessageId(true)
-                    : "upload.dropzone.description.mobile"
-                }
-                values={{
-                  maxSize: byteToHumanSizeString(maxShareSize),
-                }}
+                id="upload.dropzone.quota-hint"
+                defaultMessage={en["upload.dropzone.quota-hint"]}
               />
             </span>
-            <span className={classes.desktopDescription}>
-              <FormattedMessage
-                id={
-                  isMounted
-                    ? dropzoneMessageId(false)
-                    : "upload.dropzone.description.desktop"
-                }
-                values={{
-                  maxSize: byteToHumanSizeString(maxShareSize),
-                  shortcut: isMac ? "⌘+V" : "Ctrl+V",
-                }}
-              />
-            </span>
-          </Text>
-          <div className="rv-drop-limits" aria-label="Upload limits">
-            <span>MAX {byteToHumanSizeString(maxShareSize).toUpperCase()} / SHARE</span>
-            <span>50 MB / ACCOUNT</span>
-            <span>NO .EXE .HTML .SVG .JS .SH …</span>
           </div>
-          <span className="sr-only">
-            <FormattedMessage
-              id="upload.dropzone.quota-hint"
-              defaultMessage={en["upload.dropzone.quota-hint"]}
-            />
-          </span>
-        </div>
-      </MantineDropzone>
-      <Center>
+        </MantineDropzone>
+      </div>
+      {readout}
+      <div className={bay.gateFoot}>
+        <span>
+          BLOCKED: .EXE .BAT .CMD .SH .PS1 .JS .HTML .SVG .MSI .JAR .APK .DLL …
+        </span>
         {isFolderUploadSupported && (
           <Button
-            className={classes.control}
             variant="default"
-            size="sm"
+            size="xs"
+            radius={0}
             disabled={isUploading}
             onClick={() => folderInputRef.current?.click()}
           >
@@ -271,7 +260,7 @@ const Dropzone = ({
             />
           </Button>
         )}
-      </Center>
+      </div>
     </motion.div>
   );
 };
