@@ -1,6 +1,6 @@
 services:
-  pingvin-share-x:
-    container_name: pingvin-share-x
+  rv-files:
+    container_name: rv-files
     build: .
     restart: unless-stopped
     env_file:

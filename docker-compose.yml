@@ -1,8 +1,13 @@
 services:
-  pingvin-share-x:
-    container_name: pingvin-share-x
-    image: smp46/pingvin-share-x # or ghcr.io/smp46/pingvin-share-x
+  rv-files:
+    container_name: rv-files
+    # RV Files has no published image yet, so build from this repository.
+    # (The upstream smp46/pingvin-share-x image does not contain the RV Files hardening.)
+    build: .
     restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
     ports:
       - 3000:3000
     environment:
@@ -10,7 +15,7 @@ services:
     volumes:
       - "./data:/opt/app/backend/data:rw,z"
       - "./data/images:/opt/app/frontend/public/img:rw,z"
-  #      - "./config.yaml:/opt/app/config.yaml" # Add this line, if you want to configure pingvin-share-x via config file and not via UI
+  #      - "./config.yaml:/opt/app/config.yaml" # Add this line to configure the app with a config file instead of the admin UI
 
   # To add ClamAV, to scan your shares for malicious files,
   # see https://smp46.github.io/pingvin-share-x/setup/integrations/#clamav-docker-only

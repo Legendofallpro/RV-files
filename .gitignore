@@ -56,3 +56,9 @@ yarn-error.log*
 # Temp folder for generative work
 /temp/**
 data.bak-*/
+
+# Local logs and agent working notes (never publish)
+*.log
+.superpowers/
+.env.*
+!.env.example
