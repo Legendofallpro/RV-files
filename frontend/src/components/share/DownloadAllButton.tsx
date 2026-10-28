@@ -1,5 +1,5 @@
 import { Button } from "@mantine/core";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import useTranslate from "../../hooks/useTranslate.hook";
 import shareService from "../../services/share.service";
@@ -8,9 +8,13 @@ import toast from "../../utils/toast.util";
 const DownloadAllButton = ({
   shareId,
   recipientId,
+  primary = false,
+  children,
 }: {
   shareId: string;
   recipientId?: string;
+  primary?: boolean;
+  children?: ReactNode;
 }) => {
   const [isZipReady, setIsZipReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,8 +49,11 @@ const DownloadAllButton = ({
 
   return (
     <Button
-      variant="light"
-      color="cyan"
+      variant={primary ? "filled" : "light"}
+      color={primary ? undefined : "cyan"}
+      size={primary ? "lg" : "sm"}
+      fullWidth={primary}
+      radius={primary ? 0 : undefined}
       loading={isLoading}
       onClick={() => {
         if (!isZipReady) {
@@ -56,7 +63,7 @@ const DownloadAllButton = ({
         }
       }}
     >
-      <FormattedMessage id="share.button.download-all" />
+      {children ?? <FormattedMessage id="share.button.download-all" />}
     </Button>
   );
 };

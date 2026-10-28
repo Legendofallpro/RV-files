@@ -27,6 +27,7 @@ import authService from "../../services/auth.service";
 import { getOAuthIcon, getOAuthUrl } from "../../utils/oauth.util";
 import { safeRedirectPath } from "../../utils/router.util";
 import toast from "../../utils/toast.util";
+import AuthShell from "./AuthShell";
 
 const useStyles = createStyles((theme) => ({
   signInWith: {
@@ -147,19 +148,20 @@ const SignInForm = ({ redirectPath }: { redirectPath: string }) => {
     );
 
   return (
-    <Container size={420} my={40}>
-      <Title order={2} align="center" weight={900}>
-        <FormattedMessage id="signin.title" />
-      </Title>
-      {config.get("security.allowRegistration") && (
-        <Text color="dimmed" size="sm" align="center" mt={5}>
-          <FormattedMessage id="signin.description" />{" "}
-          <Anchor component={Link} href={"signUp"} size="sm">
-            <FormattedMessage id="signin.button.signup" />
-          </Anchor>
-        </Text>
-      )}
-      <Paper withBorder shadow="md" p={30} mt={30} radius="md">
+    <AuthShell
+      form="Form RV-01 · Boarding pass"
+      title={<FormattedMessage id="signin.title" />}
+      subtitle={
+        config.get("security.allowRegistration") ? (
+          <>
+            <FormattedMessage id="signin.description" />{" "}
+            <Link href={"signUp"}>
+              <FormattedMessage id="signin.button.signup" />
+            </Link>
+          </>
+        ) : undefined
+      }
+    >
         {config.get("oauth.disablePassword") || (
           <form
             onSubmit={form.onSubmit((values) => {
@@ -217,8 +219,7 @@ const SignInForm = ({ redirectPath }: { redirectPath: string }) => {
             </Group>
           </Stack>
         )}
-      </Paper>
-    </Container>
+    </AuthShell>
   );
 };
 

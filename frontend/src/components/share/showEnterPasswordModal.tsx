@@ -1,4 +1,6 @@
-import { Button, PasswordInput, Stack, Text } from "@mantine/core";
+import { Button, Group, PasswordInput, Stack, Text } from "@mantine/core";
+import { TbAlertTriangle, TbLock } from "react-icons/tb";
+import d from "./recipient.module.css";
 import { ModalsContextProps } from "@mantine/modals/lib/context";
 import { useState } from "react";
 import { FormattedMessage } from "react-intl";
@@ -16,7 +18,8 @@ const showEnterPasswordModal = (
     closeOnClickOutside: false,
     withCloseButton: false,
     closeOnEscape: false,
-    title: t("share.modal.password.title"),
+    title: "Security desk",
+    radius: 0,
     children: (
       <PasswordModalBody
         submitCallback={submitCallback}
@@ -40,10 +43,24 @@ export const PasswordModalBody = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const t = useTranslate();
   return (
-    <Stack align="stretch">
-      <Text size="sm">
-        <FormattedMessage id="share.modal.password.description" />
-      </Text>
+    <Stack align="stretch" className={d.desk}>
+      <div className={d.deskStrip}>
+        <span>Desk 02 · Password check</span>
+        <span>Tripwire armed</span>
+      </div>
+      <Group noWrap align="flex-start">
+        <div className={d.deskLock} aria-hidden="true">
+          <TbLock size={28} />
+        </div>
+        <div>
+          <Text weight={700} size="lg" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+            {t("share.modal.password.title")}
+          </Text>
+          <Text size="sm" color="dimmed">
+            <FormattedMessage id="share.modal.password.description" />
+          </Text>
+        </div>
+      </Group>
 
       <form
         onSubmit={async (e) => {
@@ -69,7 +86,10 @@ export const PasswordModalBody = ({
       >
         <Stack>
           <PasswordInput
-            variant="filled"
+            variant="default"
+            size="md"
+            radius={0}
+            data-autofocus
             placeholder={t("share.modal.password")}
             error={passwordError ? t(passwordError) : undefined}
             aria-label={t("share.modal.password")}
@@ -79,8 +99,15 @@ export const PasswordModalBody = ({
             }}
             value={password}
           />
-          <Button type="submit" loading={isSubmitting}>
-            <FormattedMessage id="common.button.submit" />
+          <div className={d.deskHint} role="note">
+            <TbAlertTriangle size={16} style={{ flex: "none", marginTop: 1, color: "var(--rv-signal)" }} aria-hidden="true" />
+            <span>
+              Wrong attempts are counted. After 5 misses the tripwire locks
+              this link for everyone.
+            </span>
+          </div>
+          <Button type="submit" loading={isSubmitting} size="md" radius={0}>
+            Present password
           </Button>
         </Stack>
       </form>
