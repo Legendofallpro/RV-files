@@ -230,8 +230,14 @@ else fail "10. password tripwire" "could not create share: $STATUS $(jqb .messag
 
 # --- 11 download tripwire ----------------------------------------------------
 section "Download-spray tripwire"
-note "only demonstrates the rule when run directly against the app (TRUST_PROXY_HOPS=1 takes the rightmost X-Forwarded-For); through a real proxy the IP is the true client IP"
-if new_live_share; then
+case "$BASE_URL" in
+  http://localhost*|http://127.0.0.1*) LOCAL_TARGET=1 ;;
+  *) LOCAL_TARGET=0 ;;
+esac
+if [ "$LOCAL_TARGET" = 0 ]; then
+  skip "11. 20 downloads from 5 IPs -> auto-revoked" "remote target: the server trusts only its own proxies, so one machine cannot fake 5 visitors; run against http://localhost:3001 on the server to see this rule fire"
+elif new_live_share; then
+  note "faking 5 visitors with X-Forwarded-For works only when run directly on the server"
   get_token "$TMP/dl3.jar" "$S_ID"
   for i in $(seq 1 20); do
     ip="203.0.113.$(( (i % 5) + 1 ))"
