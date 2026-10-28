@@ -1,10 +1,8 @@
 import {
   ActionIcon,
-  Box,
   Group,
   Skeleton,
   Stack,
-  Table,
   TextInput,
 } from "@mantine/core";
 import { useClipboard } from "@mantine/hooks";
@@ -23,6 +21,8 @@ import TableSortIcon, { TableSort } from "../core/SortIcon";
 import showFilePreviewModal from "./modals/showFilePreviewModal";
 import { HoverTip } from "../core/HoverTip";
 import api from "../../services/api.service";
+import m from "./recipient.module.css";
+import { fileType } from "./SafetyCard";
 
 const renderFileName = (name: string) => {
   const parts = name.split("/");
@@ -106,132 +106,114 @@ const FileList = ({
 
   useEffect(sortFiles, [sort]);
 
-  return (
-    <Box sx={{ display: "block", overflowX: "auto" }}>
-      <Table>
-        <thead>
-          <tr>
-            <th>
-              <Group spacing="xs">
-                <FormattedMessage id="share.table.name" />
-                <TableSortIcon sort={sort} setSort={setSort} property="name" />
-              </Group>
-            </th>
-            <th>
-              <Group spacing="xs">
-                <FormattedMessage id="share.table.size" />
-                <TableSortIcon sort={sort} setSort={setSort} property="size" />
-              </Group>
-            </th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {isLoading
-            ? skeletonRows
-            : files!.map((file) => (
-                <tr key={file.name}>
-                  <td>{renderFileName(file.name)}</td>
-                  <td>{byteToHumanSizeString(parseInt(file.size))}</td>
-                  <td>
-                    <Group position="right" noWrap>
-                      {shareService.isShareTextFile(file.name) && (
-                        <HoverTip label={t("share.copy-text-contents")}>
-                          <ActionIcon
-                            color="dark"
-                            variant="subtle"
-                            size={25}
-                            onClick={() => {
-                              api
-                                .get(
-                                  `/shares/${share.id}/files/${file.id}?download=false`,
-                                )
-                                .then((res) => {
-                                  if (window.isSecureContext) {
-                                    clipboard.copy(res.data);
-                                    toast.success(
-                                      t("share.notify.copied-contents"),
-                                    );
-                                  } else {
-                                    toast.error(
-                                      t("share.notify.copy-not-supported"),
-                                    );
-                                  }
-                                });
-                            }}
-                          >
-                            <TbClipboard />
-                          </ActionIcon>
-                        </HoverTip>
-                      )}
-                      {shareService.doesFileSupportPreview(file.name) && (
-                        <HoverTip label={t("common.button.preview")}>
-                          <ActionIcon
-                            color="dark"
-                            variant="subtle"
-                            size={25}
-                            onClick={() =>
-                              showFilePreviewModal(share.id, file, modals)
-                            }
-                          >
-                            <TbEye />
-                          </ActionIcon>
-                        </HoverTip>
-                      )}
-                      {!share.hasPassword && (
-                        <HoverTip label={t("common.button.copy-link")}>
-                          <ActionIcon
-                            color="dark"
-                            variant="subtle"
-                            size={25}
-                            onClick={() => copyFileLink(file)}
-                          >
-                            <TbLink />
-                          </ActionIcon>
-                        </HoverTip>
-                      )}
+  const actions = (file: FileMetaData) => (
+    <Group position="right" noWrap spacing={6}>
+      {shareService.isShareTextFile(file.name) && (
+        <HoverTip label={t("share.copy-text-contents")}>
+          <ActionIcon
+            variant="subtle"
+            size={30}
+            aria-label={t("share.copy-text-contents")}
+            onClick={() => {
+              api
+                .get(`/shares/${share.id}/files/${file.id}?download=false`)
+                .then((res) => {
+                  if (window.isSecureContext) {
+                    clipboard.copy(res.data);
+                    toast.success(t("share.notify.copied-contents"));
+                  } else {
+                    toast.error(t("share.notify.copy-not-supported"));
+                  }
+                });
+            }}
+          >
+            <TbClipboard />
+          </ActionIcon>
+        </HoverTip>
+      )}
+      {shareService.doesFileSupportPreview(file.name) && (
+        <HoverTip label={t("common.button.preview")}>
+          <ActionIcon
+            variant="subtle"
+            size={30}
+            aria-label={t("common.button.preview")}
+            onClick={() => showFilePreviewModal(share.id, file, modals)}
+          >
+            <TbEye />
+          </ActionIcon>
+        </HoverTip>
+      )}
+      {!share.hasPassword && (
+        <HoverTip label={t("common.button.copy-link")}>
+          <ActionIcon
+            variant="subtle"
+            size={30}
+            aria-label={t("common.button.copy-link")}
+            onClick={() => copyFileLink(file)}
+          >
+            <TbLink />
+          </ActionIcon>
+        </HoverTip>
+      )}
+      <HoverTip label={t("common.button.download")}>
+        <ActionIcon
+          color="victoria"
+          variant="filled"
+          size={30}
+          radius={0}
+          aria-label={`${t("common.button.download")} ${file.name}`}
+          onClick={async () => {
+            await shareService.downloadFile(share.id, file.id, recipientId);
+          }}
+        >
+          <TbDownload />
+        </ActionIcon>
+      </HoverTip>
+    </Group>
+  );
 
-                      <HoverTip label={t("common.button.download")}>
-                        <ActionIcon
-                          color="victoria"
-                          variant="filled"
-                          size={25}
-                          onClick={async () => {
-                            await shareService.downloadFile(
-                              share.id,
-                              file.id,
-                              recipientId,
-                            );
-                          }}
-                        >
-                          <TbDownload />
-                        </ActionIcon>
-                      </HoverTip>
-                    </Group>
-                  </td>
-                </tr>
-              ))}
-        </tbody>
-      </Table>
-    </Box>
+  return (
+    <section className={`${m.manifest} ${m.paper}`} aria-label="Manifest">
+      <div className={m.manifestHead}>
+        <span className={m.kicker}>
+          Manifest · {files?.length ?? 0} line{files?.length === 1 ? "" : "s"}
+        </span>
+        <Group spacing="md">
+          <span className={`${m.kicker} ${m.sortBtn}`}>
+            <FormattedMessage id="share.table.name" />
+            <TableSortIcon sort={sort} setSort={setSort} property="name" />
+          </span>
+          <span className={`${m.kicker} ${m.sortBtn}`}>
+            <FormattedMessage id="share.table.size" />
+            <TableSortIcon sort={sort} setSort={setSort} property="size" />
+          </span>
+        </Group>
+      </div>
+      {isLoading
+        ? [...Array(3)].map((_, i) => (
+            <div className={m.line} key={i}>
+              <Skeleton height={14} width={20} />
+              <Skeleton height={14} />
+              <Skeleton height={14} width={60} />
+              <Skeleton height={28} width={28} />
+            </div>
+          ))
+        : files!.map((file, index) => (
+            <div className={m.line} key={file.name}>
+              <span className={m.lineNo}>{String(index + 1).padStart(2, "0")}</span>
+              <span className={m.lineName}>
+                <span>{renderFileName(file.name)}</span>
+                <span className={m.leader} aria-hidden="true" />
+              </span>
+              <span className={m.lineMeta}>
+                {byteToHumanSizeString(parseInt(file.size))}
+                <span className={m.typeTag}>{fileType(file.name) || "FILE"}</span>
+              </span>
+              {actions(file)}
+            </div>
+          ))}
+    </section>
   );
 };
-
-const skeletonRows = [...Array(5)].map((c, i) => (
-  <tr key={i}>
-    <td>
-      <Skeleton height={30} width={30} />
-    </td>
-    <td>
-      <Skeleton height={14} />
-    </td>
-    <td>
-      <Skeleton height={14} />
-    </td>
-    <td>
-      <Skeleton height={25} width={25} />
-    </td>
-  </tr>
-));
 
 export default FileList;

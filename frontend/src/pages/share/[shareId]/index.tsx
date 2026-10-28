@@ -13,7 +13,7 @@ import { GetServerSidePropsContext } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { FormattedMessage } from "react-intl";
-import { TbEdit, TbPlusMinus } from "react-icons/tb";
+import { TbDownload, TbEdit, TbPlusMinus } from "react-icons/tb";
 import Meta from "../../../components/Meta";
 import DownloadAllButton from "../../../components/share/DownloadAllButton";
 import FileList from "../../../components/share/FileList";
@@ -103,14 +103,30 @@ const Share = ({ shareId }: { shareId: string }) => {
       "share.error.visitor-limit-exceeded.title": "VIEW LIMIT",
       "share.error.access-denied.title": "PRIVATE",
     };
-    const text = isTripwire
-      ? `${error.message!.replace(/^Auto-revoked:\s*/i, "Locked automatically after ")}. Nothing was downloaded after the lock — ask the sender for a fresh link.`
-      : (error.message ?? (error.description ? t(error.description) : ""));
+    const plain: Record<string, string> = {
+      "NOT FOUND":
+        "This link doesn't match any share. Check that it was copied in full.",
+      EXPIRED: "The sender's time limit ran out, so these files are gone.",
+      REVOKED: "The sender cancelled this link. Ask them for a new one.",
+      "VIEW LIMIT":
+        "This link was opened as many times as the sender allowed.",
+      TRIPWIRE:
+        "Nothing can be downloaded after the lock. Ask the sender for a fresh link.",
+    };
+    const code = codes[error.title] ?? "ERROR";
+    const text =
+      plain[code] ??
+      error.message ??
+      (error.description ? t(error.description) : "");
+    const reason = isTripwire
+      ? error.message!.replace(/^Auto-revoked:\s*/i, "Locked after ")
+      : undefined;
     return (
       <>
         <Meta title={t(error.title)} />
         <CheckpointClosed
-          code={codes[error.title] ?? "ERROR"}
+          code={code}
+          reason={reason}
           hazard={isTripwire}
           title={isTripwire ? "Tripwire triggered. Link locked." : t(error.title)}
           text={text}
@@ -140,72 +156,80 @@ const Share = ({ shareId }: { shareId: string }) => {
         description={t("share.description")}
       />
 
-      <Group position="apart" mb="lg">
-        <Box style={{ maxWidth: "100%", minWidth: 0, flex: "1 1 260px" }}>
-          <div className="rv-label">
-            Share ·{" "}
-            <span style={{ textTransform: "none", letterSpacing: "0.04em" }}>
-              {shareId}
-            </span>
-          </div>
-          <Title order={2} mt={4} style={{ overflowWrap: "anywhere" }}>
-            {share?.name || share?.id}
-          </Title>
-          <Text size="sm">{share?.description}</Text>
-          {share?.files?.length > 0 && (
-            <Text size="sm" color="dimmed" mt={5}>
-              <FormattedMessage
-                id="share.fileCount"
-                values={{
-                  count: share?.files?.length || 0,
-                  size: byteToHumanSizeString(
-                    share?.files?.reduce(
-                      (total: number, file: { size: string }) =>
-                        total + parseInt(file.size),
-                      0,
-                    ) || 0,
-                  ),
-                }}
-              />
-            </Text>
-          )}
-        </Box>
-
-        <Group spacing="xs">
-          {isOwner && (
-            <HoverTip label={t("account.shares.button.edit")}>
-              <Link href={`/share/${shareId}/edit`}>
-                <ActionIcon variant="outline" color="dark" size="lg">
-                  <TbPlusMinus />
-                </ActionIcon>
-              </Link>
-            </HoverTip>
-          )}
-          {isOwnerOrAdmin && (
-            <HoverTip label={t("common.button.edit")}>
-              <ActionIcon
-                variant="outline"
-                color="dark"
-                size="lg"
-                onClick={handleEditClick}
-              >
-                <TbEdit />
-              </ActionIcon>
-            </HoverTip>
-          )}
-          {share?.files.length > 1 && (
-            <DownloadAllButton shareId={shareId} recipientId={recipientId} />
-          )}
-        </Group>
-      </Group>
-
-      {share?.safety && (
-        <SafetyCard
-          safety={share.safety}
-          files={share.files}
-          createdAt={share.createdAt}
-        />
-      )}
+      {(() => {
+        const files = share?.files ?? [];
+        const ownerTools =
+          isOwner || isOwnerOrAdmin ? (
+            <Group spacing="xs">
+              <span className="rv-label">Sender tools</span>
+              {isOwner && (
+                <HoverTip label={t("account.shares.button.edit")}>
+                  <Link href={`/share/${shareId}/edit`}>
+                    <ActionIcon variant="outline" color="dark" size="lg" aria-label={t("account.shares.button.edit")}>
+                      <TbPlusMinus />
+                    </ActionIcon>
+                  </Link>
+                </HoverTip>
+              )}
+              {isOwnerOrAdmin && (
+                <HoverTip label={t("common.button.edit")}>
+                  <ActionIcon
+                    variant="outline"
+                    color="dark"
+                    size="lg"
+                    aria-label={t("common.button.edit")}
+                    onClick={handleEditClick}
+                  >
+                    <TbEdit />
+                  </ActionIcon>
+                </HoverTip>
+              )}
+            </Group>
+          ) : null;
+        const action =
+          files.length > 1 ? (
+            <DownloadAllButton shareId={shareId} recipientId={recipientId} primary>
+              <TbDownload style={{ marginRight: 8 }} />
+              Download all safely · ZIP
+            </DownloadAllButton>
+          ) : files.length === 1 ? (
+            <Button
+              size="lg"
+              fullWidth
+              radius={0}
+              leftIcon={<TbDownload />}
+              onClick={() =>
+                shareService.downloadFile(shareId, files[0].id, recipientId)
+              }
+            >
+              Download safely
+            </Button>
+          ) : null;
+        return share?.safety ? (
+          <SafetyCard
+            safety={share.safety}
+            files={files}
+            createdAt={share.createdAt}
+            shareId={shareId}
+            name={share.name}
+            description={share.description}
+            action={action}
+            tools={ownerTools}
+          />
+        ) : (
+          <Box mb="lg">
+            <div className="rv-label">Share · {shareId}</div>
+            <Title order={2} mt={4} style={{ overflowWrap: "anywhere" }}>
+              {share?.name || shareId}
+            </Title>
+            <Text size="sm">{share?.description}</Text>
+            <Group mt="md">
+              {ownerTools}
+              {action}
+            </Group>
+          </Box>
+        );
+      })()}
 
       <FileList
         files={share?.files}

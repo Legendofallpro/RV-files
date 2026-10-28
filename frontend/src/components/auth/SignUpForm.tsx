@@ -18,6 +18,7 @@ import useTranslate from "../../hooks/useTranslate.hook";
 import useUser from "../../hooks/user.hook";
 import authService from "../../services/auth.service";
 import toast from "../../utils/toast.util";
+import AuthShell from "./AuthShell";
 
 const SignUpForm = () => {
   const config = useConfig();
@@ -107,19 +108,20 @@ const SignUpForm = () => {
   };
 
   return (
-    <Container size={420} my={40}>
-      <Title order={2} align="center" weight={900}>
-        <FormattedMessage id="signup.title" />
-      </Title>
-      {config.get("security.allowRegistration") && (
-        <Text color="dimmed" size="sm" align="center" mt={5}>
-          <FormattedMessage id="signup.description" />{" "}
-          <Anchor component={Link} href={"signIn"} size="sm">
-            <FormattedMessage id="signup.button.signin" />
-          </Anchor>
-        </Text>
-      )}
-      <Paper withBorder shadow="md" p={30} mt={30} radius="md">
+    <AuthShell
+      form="Form RV-02 · Registration"
+      title={<FormattedMessage id="signup.title" />}
+      subtitle={
+        config.get("security.allowRegistration") ? (
+          <>
+            <FormattedMessage id="signup.description" />{" "}
+            <Link href={"signIn"}>
+              <FormattedMessage id="signup.button.signin" />
+            </Link>
+          </>
+        ) : undefined
+      }
+    >
         <form
           onSubmit={form.onSubmit((values) =>
             signUp(
@@ -157,8 +159,7 @@ const SignUpForm = () => {
             <FormattedMessage id="signup.button.submit" />
           </Button>
         </form>
-      </Paper>
-    </Container>
+    </AuthShell>
   );
 };
 
