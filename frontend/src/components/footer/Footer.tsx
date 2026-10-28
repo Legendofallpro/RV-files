@@ -1,7 +1,8 @@
-import { Anchor, Footer as MFooter, SimpleGrid, Text } from "@mantine/core";
-import { useMediaQuery } from "@mantine/hooks";
+import { Footer as MFooter } from "@mantine/core";
+import Link from "next/link";
 import useConfig from "../../hooks/config.hook";
 import useTranslate from "../../hooks/useTranslate.hook";
+import s from "./footer.module.css";
 
 const Footer = () => {
   const t = useTranslate();
@@ -20,53 +21,53 @@ const Footer = () => {
     (!config.get("legal.privacyPolicyText") &&
       config.get("legal.privacyPolicyUrl")) ||
     "/privacy";
-
-  const isMobile = useMediaQuery("(max-width: 700px)");
+  const legal = config.get("legal.enabled");
 
   return (
-    <MFooter height="auto" py={6} px="xl" zIndex={100}>
-      {!config.get("legal.enabled") && (
-        <Text size="xs" color="dimmed" align="center">
+    <MFooter height="auto" zIndex={100} className={s.footer}>
+      <div className={s.inner}>
+        <div className={s.brand}>
+          <strong className="rv-display">
+            {config.get("general.appName")}
+          </strong>
+          <span className={s.tag}>Checkpoint 01 · Lane open</span>
+          <p>Small files, checked before they are opened.</p>
+        </div>
+
+        <dl className={s.limits}>
+          <div><dt>Share</dt><dd>10 MB</dd></div>
+          <div><dt>Account</dt><dd>50 MB</dd></div>
+          <div><dt>Expiry</dt><dd>≤ 7 d</dd></div>
+          <div><dt>Blocked</dt><dd>21 types</dd></div>
+        </dl>
+
+        <nav className={s.links} aria-label="Footer">
+          <Link href="/upload">Share a file</Link>
+          <Link href="/account/shares">My shares</Link>
+          {legal && hasImprint && (
+            <a href={imprintUrl}>{t("imprint.title")}</a>
+          )}
+          {legal && hasPrivacy && (
+            <a href={privacyUrl}>{t("privacy.title")}</a>
+          )}
+        </nav>
+      </div>
+
+      <div className={s.fine}>
+        <span>
           {t("footer.poweredBy")}{" "}
-          <Anchor
-            size="xs"
+          <a
             href="https://github.com/smp46/pingvin-share-x"
             target="_blank"
+            rel="noreferrer"
           >
             Pingvin Share X
-          </Anchor>
-        </Text>
-      )}
-      {config.get("legal.enabled") && (
-        <SimpleGrid cols={isMobile ? 2 : 3} m={0}>
-          {!isMobile && <div></div>}
-          <Text size="xs" color="dimmed" align={isMobile ? "left" : "center"}>
-            {t("footer.poweredBy")}{" "}
-            <Anchor
-              size="xs"
-              href="https://github.com/smp46/pingvin-share-x"
-              target="_blank"
-            >
-              Pingvin Share X
-            </Anchor>
-          </Text>
-          <div>
-            <Text size="xs" color="dimmed" align="right">
-              {hasImprint && (
-                <Anchor size="xs" href={imprintUrl}>
-                  {t("imprint.title")}
-                </Anchor>
-              )}
-              {hasImprint && hasPrivacy && " • "}
-              {hasPrivacy && (
-                <Anchor size="xs" href={privacyUrl}>
-                  {t("privacy.title")}
-                </Anchor>
-              )}
-            </Text>
-          </div>
-        </SimpleGrid>
-      )}
+          </a>{" "}
+          · BSD-2-Clause
+        </span>
+        <span>SN RV-01-7F3A · 128-BIT IDS · 0 SCRIPTS EXECUTED</span>
+        <span className={s.barcode} aria-hidden="true" />
+      </div>
     </MFooter>
   );
 };

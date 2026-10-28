@@ -1,45 +1,83 @@
+/* Landing page shell + hero. Tokens only (var(--rv-*)); no hard-coded colours. */
+
 .page {
   color: var(--rv-ink);
-  padding: 40px 0 24px;
+  padding: 8px 0 0;
+  /* break out of the 960px Mantine container on wide screens */
+  margin-inline: calc((100% - min(1240px, 100vw - 32px)) / 2);
 }
 
 .hero {
-  max-width: 760px;
-  padding: 24px 0 48px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+  gap: 56px;
+  align-items: center;
+  padding: 24px 0 72px;
 }
-.sep {
-  color: var(--rv-signal);
-  margin: 0 4px;
+
+.heroCopy {
+  min-width: 0;
 }
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.eyebrowTag {
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  padding: 3px 7px;
+  color: var(--rv-signal-ink);
+  background: var(--rv-signal);
+}
+
 .title {
-  margin: 22px 0 22px;
+  margin: 26px 0 26px;
   font-family: "Space Grotesk", sans-serif;
-  font-size: clamp(48px, 9vw, 96px);
-  line-height: 0.95;
+  font-size: clamp(52px, 6.6vw, 100px);
+  line-height: 0.88;
   font-weight: 700;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.055em;
 }
 .title > span {
   display: block;
 }
+.titleFirst {
+  color: var(--rv-ink);
+}
 .titleSecond {
   position: relative;
-  isolation: isolate;
   width: fit-content;
+  color: transparent;
+  -webkit-text-stroke: 2px var(--rv-ink);
+  padding-right: 0.1em;
 }
-.titleSecond::after {
-  content: "";
+.titleStamp {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0.04em;
-  height: 0.14em;
-  background: var(--rv-signal);
-  z-index: -1;
+  right: -0.9em;
+  top: -0.62em;
+  display: inline-block;
+  padding: 4px 9px;
+  border: 2.5px solid var(--rv-signal);
+  color: var(--rv-signal);
+  -webkit-text-stroke: 0;
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--rv-bg) 82%, transparent);
+  mask-image: radial-gradient(circle at 30% 40%, black 70%, transparent 100%);
 }
+
 .description {
   margin: 0;
-  max-width: 560px;
+  max-width: 520px;
   font-size: 18px;
   line-height: 1.6;
   color: var(--rv-muted);
@@ -54,273 +92,83 @@
 .secondary {
   font-size: 15px;
   font-weight: 600;
+  color: var(--rv-ink) !important;
   text-decoration: underline !important;
   text-underline-offset: 4px;
   text-decoration-thickness: 1.5px;
 }
 .secondary:hover {
-  color: var(--rv-signal);
+  text-decoration-color: var(--rv-signal) !important;
 }
 
-/* ---- checkpoint flow strip ---- */
-.flow {
-  border: 1.5px solid var(--rv-line-strong);
-  border-radius: 4px;
-  background: var(--rv-surface);
-}
-.flowHead {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 6px 16px;
-  padding: 10px 16px;
-  border-bottom: 1.5px solid var(--rv-line-strong);
-}
-.stations {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.heroMeta {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, auto);
+  justify-content: start;
+  margin: 40px 0 0;
+  border-top: 1.5px solid var(--rv-line-strong);
 }
-.station {
-  position: relative;
-  display: grid;
-  gap: 6px;
-  align-content: start;
-  padding: 22px 20px 26px;
+.heroMeta > div {
+  padding: 12px 28px 0 0;
+}
+.heroMeta > div + div {
+  padding-left: 20px;
+  border-left: 1px solid var(--rv-line);
+}
+.heroMeta dt {
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rv-muted);
+}
+.heroMeta dd {
+  margin: 4px 0 0;
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.heroVisual {
   min-width: 0;
 }
-.station + .station {
-  border-left: 1.5px dashed var(--rv-line-strong);
-}
-/* arrow chevron on the boundary between stations */
-.station + .station::before {
-  content: "";
-  position: absolute;
-  left: -7px;
-  top: 30px;
-  width: 11px;
-  height: 11px;
-  background: var(--rv-surface);
-  border-top: 1.5px solid var(--rv-line-strong);
-  border-right: 1.5px solid var(--rv-line-strong);
-  transform: rotate(45deg);
-}
-.station strong {
-  margin-top: 6px;
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 20px;
-  letter-spacing: -0.01em;
-}
-.station small {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 12px;
-  color: var(--rv-muted);
-}
-.stationIndex {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--rv-muted);
-}
-.flowStamp {
-  position: absolute;
-  right: 14px;
-  top: 18px;
-}
 
-/* ---- conveyor + scanner ---- */
-.flowBody {
-  position: relative;
-}
-.conveyor {
-  position: relative;
-  height: 58px;
-  border-top: 1.5px solid var(--rv-line-strong);
-  background:
-    repeating-linear-gradient(90deg, var(--rv-line) 0 2px, transparent 2px 22px)
-      0 50% / 100% 2px no-repeat,
-    var(--rv-bg);
-  overflow: hidden;
-}
-.chip {
-  position: absolute;
-  top: 50%;
-  display: grid;
-  width: 168px;
-  height: 32px;
-  margin-left: -84px;
-  margin-top: -16px;
-  border: 1.5px solid var(--rv-line-strong);
-  border-radius: 3px;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 12px;
-  font-weight: 600;
-  color: #16130f;
-}
-.chip > span {
-  grid-area: 1 / 1;
-  display: grid;
-  place-items: center;
-  color: var(--rv-ink);
-}
-.chip {
-  background: var(--rv-surface);
-}
-.chip > .chipFill {
-  background: #ff5a1f;
-}
-.chip > .chipAlt {
-  color: #16130f;
-}
-.scanZone {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 25%;
-  width: 25%;
-  overflow: hidden;
-  pointer-events: none;
-}
-.scanBeam {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 30%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 90, 31, 0.18) 70%,
-    #ff5a1f 98%,
-    transparent
-  );
-}
-
-/* ---- inspection form (features) ---- */
-.form {
-  margin-top: 56px;
-  border: 1.5px solid var(--rv-line-strong);
-  border-radius: 4px;
-  background: var(--rv-surface);
-}
-.formHead {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 6px 16px;
-  padding: 10px 16px;
-  border-bottom: 1.5px solid var(--rv-line-strong);
-}
-.field {
-  display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) 220px;
-  gap: 20px;
-  align-items: center;
-  padding: 22px 20px;
-}
-.field + .field {
-  border-top: 1px solid var(--rv-line);
-}
-.fieldNo {
-  align-self: start;
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border: 1.5px solid var(--rv-line-strong);
-  border-radius: 50%;
-  font-family: "JetBrains Mono", monospace;
-  font-size: 13px;
-  font-weight: 700;
-}
-.field h2 {
-  margin: 0 0 6px;
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 22px;
-  letter-spacing: -0.02em;
-}
-.field p {
-  margin: 0;
-  max-width: 520px;
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--rv-muted);
-}
-.fieldValue {
-  display: grid;
-  gap: 4px;
-  justify-items: end;
-  text-align: right;
-}
-.fieldValue strong {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 30px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.bottomLine {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 56px;
-  padding-top: 14px;
-  border-top: 1px solid var(--rv-line);
-}
-
-@media (max-width: 760px) {
-  .page {
-    padding-top: 16px;
-  }
-  .stations {
+@media (max-width: 1023px) {
+  .hero {
     grid-template-columns: 1fr;
+    gap: 40px;
   }
-  .station {
-    grid-template-columns: 34px 1fr;
-    column-gap: 12px;
-    padding: 16px;
+}
+
+@media (max-width: 600px) {
+  .page {
+    margin-inline: 0;
   }
-  .station > * {
-    grid-column: 2;
+  .hero {
+    padding: 8px 0 48px;
   }
-  .station > .stationIndex {
-    grid-column: 1;
-    grid-row: 1 / span 3;
-    padding-top: 4px;
+  .title {
+    font-size: clamp(44px, 14vw, 64px);
   }
-  .station strong {
-    margin-top: 0;
+  .titleSecond {
+    -webkit-text-stroke-width: 1.5px;
   }
-  .station + .station {
-    border-left: 0;
-    border-top: 1.5px dashed var(--rv-line-strong);
+  .titleStamp {
+    position: static;
+    display: table;
+    margin-top: 12px;
+    font-size: 10px;
   }
-  .station + .station::before {
-    left: 26px;
-    top: -7px;
-    transform: rotate(135deg);
+  .description {
+    font-size: 16px;
   }
-  .conveyor,
-  .scanZone {
-    display: none;
+  .heroMeta > div {
+    padding-right: 12px;
   }
-  .form {
-    margin-top: 40px;
+  .heroMeta > div + div {
+    padding-left: 12px;
   }
-  .field {
-    grid-template-columns: 40px minmax(0, 1fr);
-    gap: 14px;
-    padding: 18px 16px;
-  }
-  .fieldValue {
-    grid-column: 2;
-    justify-items: start;
-    text-align: left;
-  }
-  .fieldValue strong {
-    font-size: 24px;
+  .heroMeta dd {
+    font-size: 16px;
   }
 }

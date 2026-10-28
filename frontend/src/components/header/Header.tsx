@@ -25,7 +25,7 @@ import useHomeHref from "../../hooks/homeHref.hook";
 import ActionAvatar from "./ActionAvatar";
 import NavbarShareMenu from "./NavbarShareMenu";
 
-const HEADER_HEIGHT = 60;
+const HEADER_HEIGHT = 64;
 
 type NavLink = {
   link?: string;
@@ -39,6 +39,68 @@ type MobileMenuView = "root" | "shares" | "profile";
 const useStyles = createStyles((theme) => ({
   root: {
     zIndex: 1,
+    background: "var(--rv-bg)",
+    borderBottom: "1.5px solid var(--rv-line-strong)",
+    position: "relative",
+    "&::after": {
+      content: '""',
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: -5,
+      height: 3,
+      background:
+        "repeating-linear-gradient(-45deg, var(--rv-signal) 0 6px, transparent 6px 12px)",
+      opacity: 0.85,
+    },
+  },
+
+  brand: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    textDecoration: "none",
+    color: "var(--rv-ink)",
+  },
+
+  status: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "4px 9px",
+    border: "1px solid var(--rv-line)",
+    background: "var(--rv-surface)",
+    fontFamily: '"JetBrains Mono", ui-monospace, Menlo, monospace',
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: "0.14em",
+    color: "var(--rv-muted)",
+    whiteSpace: "nowrap",
+    [theme.fn.smallerThan("md")]: {
+      display: "none",
+    },
+  },
+
+  led: {
+    width: 8,
+    height: 8,
+    borderRadius: "50%",
+    background: "var(--rv-ok)",
+    boxShadow: "0 0 0 3px color-mix(in srgb, var(--rv-ok) 25%, transparent)",
+    animation: "rvLedPulse 2.4s ease-in-out infinite",
+    "@keyframes rvLedPulse": {
+      "50%": {
+        boxShadow:
+          "0 0 0 5px color-mix(in srgb, var(--rv-ok) 0%, transparent)",
+      },
+    },
+    "@media (prefers-reduced-motion: reduce)": {
+      animation: "none",
+    },
+  },
+
+  serial: {
+    color: "var(--rv-ink)",
   },
 
   mobilePanel: {
@@ -75,21 +137,20 @@ const useStyles = createStyles((theme) => ({
   link: {
     display: "block",
     lineHeight: 1,
-    padding: "8px 12px",
-    borderRadius: theme.radius.sm,
+    padding: "9px 12px",
+    borderRadius: 0,
     textDecoration: "none",
-    color:
-      theme.colorScheme === "dark"
-        ? theme.colors.dark[0]
-        : theme.colors.gray[7],
-    fontSize: theme.fontSizes.sm,
-    fontWeight: 500,
+    color: "var(--rv-ink)",
+    fontFamily: '"JetBrains Mono", ui-monospace, Menlo, monospace',
+    fontSize: 12,
+    fontWeight: 700,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    border: "1px solid transparent",
 
     "&:hover": {
-      backgroundColor:
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[6]
-          : theme.colors.gray[0],
+      borderColor: "var(--rv-line-strong)",
+      backgroundColor: "var(--rv-surface)",
     },
 
     [theme.fn.smallerThan("sm")]: {
@@ -129,12 +190,10 @@ const useStyles = createStyles((theme) => ({
 
   linkActive: {
     "&, &:hover": {
-      backgroundColor:
-        theme.colorScheme === "dark"
-          ? theme.fn.rgba(theme.colors[theme.primaryColor][9], 0.25)
-          : theme.colors[theme.primaryColor][0],
-      color:
-        theme.colors[theme.primaryColor][theme.colorScheme === "dark" ? 3 : 7],
+      backgroundColor: "var(--rv-ink)",
+      borderColor: "var(--rv-ink)",
+      color: "var(--rv-bg)",
+      boxShadow: "inset 0 -3px 0 var(--rv-signal)",
     },
   },
 }));
@@ -359,18 +418,24 @@ const Header = () => {
   return (
     <>
       <MantineHeader height={HEADER_HEIGHT} mb={0} className={classes.root}>
-        <Container className={classes.header}>
-          <Link href={homeHref} passHref>
-            <Group>
+        <Container size={1240} className={classes.header}>
+          <Group spacing={14} noWrap>
+            <Link href={homeHref} className={classes.brand}>
               <Logo height={35} width={35} />
               <Text weight={700} className="rv-display" size="lg">
                 {config.get("general.appName")}
               </Text>
-              <span className="rv-label rv-hide-sm" style={{ marginLeft: -6 }}>
+              <span className="rv-label rv-hide-sm" style={{ marginLeft: -4 }}>
                 / Checkpoint 01
               </span>
-            </Group>
-          </Link>
+            </Link>
+            <span className={classes.status} aria-label="Checkpoint online">
+              <span className={classes.led} aria-hidden="true" />
+              CHECKPOINT ONLINE
+              <span aria-hidden="true">·</span>
+              <span className={classes.serial}>SN RV-01-7F3A</span>
+            </span>
+          </Group>
           <Group spacing={5} className={classes.links}>
             <Group>{desktopItems}</Group>
           </Group>
