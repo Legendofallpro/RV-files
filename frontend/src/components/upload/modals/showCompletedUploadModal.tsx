@@ -1,4 +1,8 @@
 import { Button, Stack, Text, Collapse } from "@mantine/core";
+import { useClipboard } from "@mantine/hooks";
+import { TbCheck, TbCopy, TbExternalLink, TbQrcode } from "react-icons/tb";
+import toast from "../../../utils/toast.util";
+import tk from "../ticket.module.css";
 import { useModals } from "@mantine/modals";
 import { ModalsContextProps } from "@mantine/modals/lib/context";
 import { useState } from "react";
@@ -9,7 +13,6 @@ import useTranslate, {
   translateOutsideContext,
 } from "../../../hooks/useTranslate.hook";
 import { CompletedShare } from "../../../types/share.type";
-import CopyTextField from "../CopyTextField";
 import QRCode from "../../share/QRCode";
 import ShareTicket from "../../share/ShareTicket";
 
@@ -25,6 +28,7 @@ const showCompletedUploadModal = (
     closeOnClickOutside: false,
     withCloseButton: false,
     closeOnEscape: false,
+    size: "lg",
     title: t("upload.modal.completed.share-ready"),
     children: (
       <Body
@@ -52,15 +56,25 @@ const Body = ({
   const router = useRouter();
   const t = useTranslate();
 
+  const isReverseShare = !!router.query["reverseShareToken"];
+
+  const link = `${appUrl !== defaultAppUrl ? appUrl : window.location.origin}/s/${share.id}`;
+
   const [showQR, setShowQR] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const clipboard = useClipboard({ timeout: 500 });
+  const canCopy = typeof window !== "undefined" && window.isSecureContext;
+  const copyLink = () => {
+    clipboard.copy(link);
+    toast.success(t("common.notify.copied-link"));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
 
   const handleToggleQR = () => {
     setShowQR(!showQR);
   };
 
-  const isReverseShare = !!router.query["reverseShareToken"];
-
-  const link = `${appUrl !== defaultAppUrl ? appUrl : window.location.origin}/s/${share.id}`;
 
   return (
     <Stack align="stretch">
@@ -70,9 +84,42 @@ const Body = ({
         expiration={share.expiration}
         maxViews={maxViews}
       />
-      <CopyTextField link={link} toggleQR={handleToggleQR} />
+      <div className={tk.controls} role="group" aria-label="Ticket controls">
+        {canCopy ? (
+          <button
+            type="button"
+            className={`${tk.ctl} ${tk.ctlPrimary}`}
+            onClick={copyLink}
+          >
+            {copied ? <TbCheck /> : <TbCopy />}
+            {copied ? "Copied" : "Copy link"}
+          </button>
+        ) : (
+          <input
+            readOnly
+            value={link}
+            aria-label={t("common.text.link")}
+            className={tk.ctl}
+            onFocus={(e) => e.currentTarget.select()}
+            style={{ textTransform: "none", minWidth: 0 }}
+          />
+        )}
+        <button
+          type="button"
+          className={`${tk.ctl} ${showQR ? tk.ctlOn : ""}`}
+          onClick={handleToggleQR}
+          aria-pressed={showQR}
+        >
+          <TbQrcode /> QR
+        </button>
+        <a className={tk.ctl} href={link}>
+          <TbExternalLink /> Open
+        </a>
+      </div>
       <Collapse in={showQR}>
-        <QRCode link={link} />
+        <div className={tk.qrBox}>
+          <QRCode link={link} />
+        </div>
       </Collapse>
       {share.notifyReverseShareCreator === true && (
         <Text
@@ -87,12 +134,7 @@ const Body = ({
           {t("upload.modal.completed.notified-reverse-share-creator")}
         </Text>
       )}
-      <Text
-        size="xs"
-        sx={(theme) => ({
-          color: theme.colors.gray[6],
-        })}
-      >
+      <Text className={tk.doneNote}>
         {/* If our share.expiration is timestamp 0, show a different message */}
         {moment(share.expiration).unix() === 0
           ? t("upload.modal.completed.never-expires")
